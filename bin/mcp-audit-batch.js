@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// mcp-audit-batch <list-file> [--json] [--allow-exec] [--concurrency N] [--out FILE]
+// mcpaudit-batch <list-file> [--json] [--allow-exec] [--concurrency N] [--out FILE]
 //
 // <list-file>: one target per line —
 //   https://host/mcp        (http, always safe to scan)
@@ -26,7 +26,7 @@ function parseArgs(argv) {
 async function main() {
   const a = parseArgs(process.argv.slice(2));
   if (!a.file) {
-    console.error("usage: mcp-audit-batch <list-file> [--json] [--allow-exec] [--concurrency N] [--out FILE]");
+    console.error("usage: mcpaudit-batch <list-file> [--json] [--allow-exec] [--concurrency N] [--out FILE]");
     process.exit(2);
   }
 
