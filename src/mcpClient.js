@@ -4,7 +4,7 @@
 
 const PROTOCOL_VERSION = "2025-06-18";
 
-async function rpc(url, headers, body) {
+async function rpc(url, headers, body, timeoutMs = 12000) {
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -14,6 +14,8 @@ async function rpc(url, headers, body) {
       ...headers,
     },
     body: JSON.stringify(body),
+    // Don't let an unresponsive server hang a batch run.
+    signal: AbortSignal.timeout(timeoutMs),
   });
 
   const text = await res.text();

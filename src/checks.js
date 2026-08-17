@@ -17,19 +17,24 @@ export function runChecks(probe) {
   const add = (f) => findings.push(f);
 
   if (!probe.reachable) {
-    add({ id: "unreachable", severity: "info", title: "Server not reachable over HTTP",
-      detail: probe.errors.join("; ") || "No response. stdio/npm transports aren't supported yet." });
+    add({ id: "unreachable", severity: "info", title: `Server not reachable (${probe.transport})`,
+      detail: probe.errors.join("; ") || "No response to the MCP initialize handshake." });
     return findings;
   }
 
-  // --- AUTH ---
-  if (probe.respondedWithoutAuth) {
-    add({ id: "no-auth", severity: "critical",
-      title: "Server accepts initialize with no authentication",
-      detail: `initialize returned ${probe.initStatus} without any auth header. ~41% of public MCP servers require no auth (BlueRock 2026). Anyone who can reach this endpoint can drive its tools.` });
-  } else if (probe.initStatus === 401 || probe.initStatus === 403) {
-    add({ id: "auth-present", severity: "info", title: "Auth required",
-      detail: `Unauthenticated initialize returned ${probe.initStatus}. Good. Verify it's OAuth, not a shared static key (only 8.5% of servers use OAuth).` });
+  // --- AUTH (HTTP-only; stdio is a local trust boundary, not a network one) ---
+  if (probe.transport === "http") {
+    if (probe.respondedWithoutAuth) {
+      add({ id: "no-auth", severity: "critical",
+        title: "Server accepts initialize with no authentication",
+        detail: `initialize returned ${probe.initStatus} without any auth header. ~41% of public MCP servers require no auth (BlueRock 2026). Anyone who can reach this endpoint can drive its tools.` });
+    } else if (probe.initStatus === 401 || probe.initStatus === 403) {
+      add({ id: "auth-present", severity: "info", title: "Auth required",
+        detail: `Unauthenticated initialize returned ${probe.initStatus}. Good. Verify it's OAuth, not a shared static key (only 8.5% of servers use OAuth).` });
+    }
+  } else if (probe.transport === "stdio") {
+    add({ id: "stdio-scope", severity: "info", title: "Local (stdio) server — capability review",
+      detail: "Auth is out of scope for a local stdio server; the risk is what its tools can do and what secrets it reads from the environment. Findings below focus on tool capabilities." });
   }
 
   // --- TOOL-SURFACE CHECKS ---
@@ -61,9 +66,9 @@ export function runChecks(probe) {
     }
   }
 
-  if (probe.tools.length === 0 && probe.respondedWithoutAuth) {
+  if (probe.tools.length === 0 && probe.reachable) {
     add({ id: "no-tools-listed", severity: "info", title: "No tools enumerated",
-      detail: "tools/list returned nothing — server may gate tools behind auth or a session." });
+      detail: "tools/list returned nothing — server may gate tools behind auth, a session, or dynamic registration." });
   }
 
   return findings;

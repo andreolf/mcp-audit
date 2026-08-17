@@ -13,13 +13,62 @@ is saturated (22k+ servers); **quality/security is the differentiator.**
 
 ## Usage
 
+Scan a **remote** server (Streamable HTTP):
 ```bash
 node bin/mcp-audit.js https://example.com/mcp
-node bin/mcp-audit.js https://example.com/mcp --json
-node bin/mcp-audit.js https://example.com/mcp --header "Authorization: Bearer $TOKEN"
+node bin/mcp-audit.js https://example.com/mcp --header "Authorization: Bearer $TOKEN" --json
 ```
 
-Requires Node 18+ (uses global `fetch`). Zero dependencies. Once published: `npx mcp-audit <url>`.
+Scan a **published** server (spawned via `npx -y <package>`):
+```bash
+node bin/mcp-audit.js --npm @modelcontextprotocol/server-filesystem --timeout 20000
+```
+
+Scan a **local** server started by a command (stdio):
+```bash
+node bin/mcp-audit.js --cmd "node my-server.js"
+```
+
+Requires Node 18+ (uses global `fetch`). Zero dependencies. Once published: `npx mcp-audit ...`.
+
+Exit codes: `0` clean · `1` critical/high finding · `2` couldn't scan / bad usage. CI-friendly.
+
+## Batch mode (the launch audit)
+
+Scan many servers and get a worst-first leaderboard + the aggregate stats for a launch post:
+
+```bash
+node bin/mcp-audit-batch.js targets.txt --out audit.md
+```
+
+`targets.txt` is one target per line (`https://…`, `npm:<package>`, or `cmd:<command>`; `#` comments allowed).
+
+> ⚠️ **Safety:** scanning an `npm:`/`cmd:` server *runs that server's code on your machine*. Batch mode
+> is **HTTP-only by default** and SKIPS local/npm targets unless you pass `--allow-exec` — do that only
+> inside a sandbox/container you trust. Mass-running untrusted packages is remote-code-execution exposure.
+
+Output includes the headline numbers ("X% of reachable HTTP servers accept initialize with no auth")
+that become the launch thread.
+
+### The full launch pipeline
+
+Pull targets from the **official MCP Registry** (discovery only — never executes a server), then audit them:
+
+```bash
+node bin/mcp-audit-fetch.js --max 300 --out targets.txt   # HTTP remotes = safe to scan
+node bin/mcp-audit-batch.js targets.txt --concurrency 8 --out audit.md
+```
+
+`mcp-audit-fetch` emits registry HTTP endpoints as scannable lines and npm packages as *commented*
+lines (opt in with `--include-npm`, then `--allow-exec` in a sandbox). A real run of the first 30
+registry servers found **50% accept `initialize` with no auth** — the kind of number the launch
+post is built on.
+
+## Test
+
+```bash
+npm test   # spawns the mock insecure server (stdio + batch) and asserts findings — 12 checks
+```
 
 ## What it checks (starter heuristics — expand these)
 - **no-auth** — server accepts `initialize` with no credentials (critical)
@@ -38,12 +87,15 @@ src/report.js      grading (A–F), badge, Markdown/JSON output
 ```
 
 ## Roadmap (turn this skeleton into the viral thing)
-1. **stdio + npm/PyPI transports** — scan local/published servers, not just remote URLs. This
-   unlocks scanning the top-200 registry servers for the launch audit.
+1. ✅ **stdio + npm transports** — scan local (`--cmd`) and published (`--npm`, via npx) servers,
+   not just remote URLs. This unlocks scanning the registry's top servers for the launch audit.
+   *(PyPI/`uvx` equivalent is a small follow-up.)*
 2. **Static-key vs OAuth detection** — inspect the auth challenge / token format.
 3. **Deeper SSRF probe** — actually call fetch-style tools against a canary internal URL in a sandbox.
-4. **Batch mode + leaderboard** — `mcp-audit --registry pulsemcp --top 200` → a ranked report.
+4. ✅ **Batch mode + leaderboard** — `mcp-audit-batch targets.txt` → ranked report + headline stats.
    *That ranked report is the launch artifact:* "We audited the 200 most-installed MCP servers."
+5. ✅ **Registry fetcher** (`mcp-audit-fetch`) — pulls HTTP targets from the official MCP Registry
+   (discovery only, never executes). npm packages emitted commented-out. `--include-npm` to opt in.
 5. **Embeddable badge** — `MCP Security: A` shields.io-style badge servers add to their README
    (2026 ranking signal, and free distribution for you).
 6. **Registry presence** — list on mcp.so, smithery.ai, glama.ai, PulseMCP, official MCP Registry,
