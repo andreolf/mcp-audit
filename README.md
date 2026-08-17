@@ -4,12 +4,24 @@
 missing auth, SSRF surface, high-privilege tools, prompt-injection-prone tool descriptions, and
 leaked secrets.
 
-Why this exists (2026 data): of ~7,000 public MCP servers, **41% require no auth, 36.7% are
-SSRF-vulnerable, only 8.5% use OAuth**, and 30+ CVEs were filed in a single 60-day window. Count
-is saturated (22k+ servers); **quality/security is the differentiator.**
+Why this exists (2026 data): of ~7,000 public MCP servers, **41% require no auth, 36.7% expose an
+SSRF surface, only 8.5% use OAuth**, and 30+ CVEs were filed in a single 60-day window. Server
+*count* is saturated (22k+ servers); security posture is not. Other tools (e.g. Invariant's
+`mcp-scan`) inspect a single server deeply — mcpaudit adds **registry-wide batch auditing**: point
+it at the official MCP Registry and grade the whole ecosystem at once.
 
-> ⚠️ Heuristic scanner. A clean report is **not** a security guarantee. Scan only servers you're
-> authorized to test, and disclose findings responsibly (coordinated, no public exploit steps).
+```bash
+npm i -g @andreolf/mcpaudit    # then: mcpaudit <url>
+# or zero-install:  npx @andreolf/mcpaudit <url>
+```
+
+**Is it safe to run?** Yes by design: mcpaudit sends only a read-only `initialize` + `tools/list`
+handshake and inspects the *declared* tools. It **never executes a scanned server's code** unless
+you explicitly pass `--allow-exec` to spawn a local/npm server.
+
+> ⚠️ Heuristic scanner. Findings describe *surface* (e.g. "no auth", "exposes a URL-fetching tool"),
+> not proven exploits — a clean report is **not** a security guarantee. Scan only servers you're
+> authorized to test, and disclose findings responsibly. See [SECURITY.md](SECURITY.md).
 
 ## Usage
 
