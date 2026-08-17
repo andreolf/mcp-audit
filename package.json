@@ -1,6 +1,6 @@
 {
   "name": "@andreolf/mcpaudit",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "npm audit for MCP servers \u2014 grade any MCP server A\u2013F on auth, SSRF, static keys, and prompt-injection surface.",
   "type": "module",
   "bin": {
@@ -40,6 +40,7 @@
     "bin",
     "src",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ]
 }

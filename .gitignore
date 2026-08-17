@@ -2,3 +2,8 @@ node_modules/
 *.log
 .DS_Store
 reports/
+
+# generated audit data (may contain named findings — keep private)
+audit*.md
+targets.txt
+*.progress

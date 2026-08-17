@@ -45,28 +45,37 @@ async function pool(items, size, worker) {
   return results;
 }
 
-export async function runBatch(specs, { concurrency = 5, allowExec = false } = {}) {
+export async function runBatch(specs, { concurrency = 5, allowExec = false, onProgress = null, onResult = null } = {}) {
+  let done = 0;
   const results = await pool(specs, concurrency, async (spec) => {
-    if (spec.transport === "invalid") {
-      return { target: spec.label, skipped: true, reason: spec.error };
-    }
-    if (spec.execRequired && !allowExec) {
-      return { target: spec.label, skipped: true, reason: "requires --allow-exec (would run untrusted code locally)" };
-    }
-    try {
-      const r = await scan(spec);
-      return {
-        target: r.target,
-        reachable: r.probe.reachable,
-        transport: r.probe.transport,
-        grade: r.grade,
-        findings: r.findings,
-      };
-    } catch (err) {
-      return { target: spec.label, skipped: true, reason: err.message };
-    }
+    const res = await scanOne(spec, allowExec);
+    done++;
+    if (onProgress) onProgress(done, specs.length);
+    if (onResult) onResult(res, done, specs.length); // for incremental flush
+    return res;
   });
   return results;
+}
+
+async function scanOne(spec, allowExec) {
+  if (spec.transport === "invalid") {
+    return { target: spec.label, skipped: true, reason: spec.error };
+  }
+  if (spec.execRequired && !allowExec) {
+    return { target: spec.label, skipped: true, reason: "requires --allow-exec (would run untrusted code locally)" };
+  }
+  try {
+    const r = await scan(spec);
+    return {
+      target: r.target,
+      reachable: r.probe.reachable,
+      transport: r.probe.transport,
+      grade: r.grade,
+      findings: r.findings,
+    };
+  } catch (err) {
+    return { target: spec.label, skipped: true, reason: err.message };
+  }
 }
 
 function has(findings, id) {

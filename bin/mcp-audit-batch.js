@@ -10,6 +10,10 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { parseList, runBatch, aggregate, toLeaderboard } from "../src/batch.js";
 
+// Never let one weird server response take down a long census silently.
+process.on("unhandledRejection", (e) => console.error(`\n[unhandledRejection] ${e?.message ?? e}`));
+process.on("uncaughtException", (e) => console.error(`\n[uncaughtException] ${e?.message ?? e}`));
+
 function parseArgs(argv) {
   const a = { file: null, json: false, allowExec: false, concurrency: 5, out: null };
   for (let i = 0; i < argv.length; i++) {
@@ -44,7 +48,25 @@ async function main() {
     console.error("    Re-run with --allow-exec ONLY inside a sandbox/container you trust.");
   }
 
-  const results = await runBatch(specs, { concurrency: a.concurrency, allowExec: a.allowExec });
+  const t0 = Date.now();
+  const collected = [];
+  const flush = () => {
+    if (!a.out) return;
+    try { writeFileSync(a.out, toLeaderboard(collected, aggregate(collected))); } catch { /* keep scanning */ }
+  };
+  await runBatch(specs, {
+    concurrency: a.concurrency,
+    allowExec: a.allowExec,
+    onProgress: (done, total) => {
+      if (done % 25 === 0 || done === total) process.stderr.write(`\rscanned ${done}/${total}   `);
+    },
+    onResult: (res, done) => {
+      collected.push(res);
+      if (done % 100 === 0) flush(); // partial report survives a kill mid-run
+    },
+  });
+  process.stderr.write(`\rscanned ${collected.length}/${specs.length} in ${Math.round((Date.now() - t0) / 1000)}s\n`);
+  const results = collected;
   const agg = aggregate(results);
 
   if (a.json) {

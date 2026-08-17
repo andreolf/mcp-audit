@@ -4,7 +4,7 @@
 
 const PROTOCOL_VERSION = "2025-06-18";
 
-async function rpc(url, headers, body, timeoutMs = 12000) {
+async function rpc(url, headers, body, timeoutMs = 8000) {
   const res = await fetch(url, {
     method: "POST",
     headers: {
