@@ -13,13 +13,31 @@ is saturated (22k+ servers); **quality/security is the differentiator.**
 
 ## Usage
 
+Scan a **remote** server (Streamable HTTP):
 ```bash
 node bin/mcp-audit.js https://example.com/mcp
-node bin/mcp-audit.js https://example.com/mcp --json
-node bin/mcp-audit.js https://example.com/mcp --header "Authorization: Bearer $TOKEN"
+node bin/mcp-audit.js https://example.com/mcp --header "Authorization: Bearer $TOKEN" --json
 ```
 
-Requires Node 18+ (uses global `fetch`). Zero dependencies. Once published: `npx mcp-audit <url>`.
+Scan a **published** server (spawned via `npx -y <package>`):
+```bash
+node bin/mcp-audit.js --npm @modelcontextprotocol/server-filesystem --timeout 20000
+```
+
+Scan a **local** server started by a command (stdio):
+```bash
+node bin/mcp-audit.js --cmd "node my-server.js"
+```
+
+Requires Node 18+ (uses global `fetch`). Zero dependencies. Once published: `npx mcp-audit ...`.
+
+Exit codes: `0` clean · `1` critical/high finding · `2` couldn't scan / bad usage. CI-friendly.
+
+## Test
+
+```bash
+npm test   # spawns the mock insecure server over stdio and asserts the findings
+```
 
 ## What it checks (starter heuristics — expand these)
 - **no-auth** — server accepts `initialize` with no credentials (critical)
@@ -38,8 +56,9 @@ src/report.js      grading (A–F), badge, Markdown/JSON output
 ```
 
 ## Roadmap (turn this skeleton into the viral thing)
-1. **stdio + npm/PyPI transports** — scan local/published servers, not just remote URLs. This
-   unlocks scanning the top-200 registry servers for the launch audit.
+1. ✅ **stdio + npm transports** — scan local (`--cmd`) and published (`--npm`, via npx) servers,
+   not just remote URLs. This unlocks scanning the registry's top servers for the launch audit.
+   *(PyPI/`uvx` equivalent is a small follow-up.)*
 2. **Static-key vs OAuth detection** — inspect the auth challenge / token format.
 3. **Deeper SSRF probe** — actually call fetch-style tools against a canary internal URL in a sandbox.
 4. **Batch mode + leaderboard** — `mcp-audit --registry pulsemcp --top 200` → a ranked report.

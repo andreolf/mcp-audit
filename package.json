@@ -10,7 +10,8 @@
     "node": ">=18"
   },
   "scripts": {
-    "start": "node bin/mcp-audit.js"
+    "start": "node bin/mcp-audit.js",
+    "test": "node test/run.mjs"
   },
   "keywords": ["mcp", "model-context-protocol", "security", "audit", "scanner", "agents"],
   "license": "MIT",
