@@ -33,10 +33,27 @@ Requires Node 18+ (uses global `fetch`). Zero dependencies. Once published: `npx
 
 Exit codes: `0` clean · `1` critical/high finding · `2` couldn't scan / bad usage. CI-friendly.
 
+## Batch mode (the launch audit)
+
+Scan many servers and get a worst-first leaderboard + the aggregate stats for a launch post:
+
+```bash
+node bin/mcp-audit-batch.js targets.txt --out audit.md
+```
+
+`targets.txt` is one target per line (`https://…`, `npm:<package>`, or `cmd:<command>`; `#` comments allowed).
+
+> ⚠️ **Safety:** scanning an `npm:`/`cmd:` server *runs that server's code on your machine*. Batch mode
+> is **HTTP-only by default** and SKIPS local/npm targets unless you pass `--allow-exec` — do that only
+> inside a sandbox/container you trust. Mass-running untrusted packages is remote-code-execution exposure.
+
+Output includes the headline numbers ("X% of reachable HTTP servers accept initialize with no auth")
+that become the launch thread.
+
 ## Test
 
 ```bash
-npm test   # spawns the mock insecure server over stdio and asserts the findings
+npm test   # spawns the mock insecure server (stdio + batch) and asserts findings — 12 checks
 ```
 
 ## What it checks (starter heuristics — expand these)
@@ -61,8 +78,10 @@ src/report.js      grading (A–F), badge, Markdown/JSON output
    *(PyPI/`uvx` equivalent is a small follow-up.)*
 2. **Static-key vs OAuth detection** — inspect the auth challenge / token format.
 3. **Deeper SSRF probe** — actually call fetch-style tools against a canary internal URL in a sandbox.
-4. **Batch mode + leaderboard** — `mcp-audit --registry pulsemcp --top 200` → a ranked report.
+4. ✅ **Batch mode + leaderboard** — `mcp-audit-batch targets.txt` → ranked report + headline stats.
    *That ranked report is the launch artifact:* "We audited the 200 most-installed MCP servers."
+   Remaining: a fetcher that pulls the target list from PulseMCP/Glama (kept separate from execution
+   for safety), so you can point it at the top-N.
 5. **Embeddable badge** — `MCP Security: A` shields.io-style badge servers add to their README
    (2026 ranking signal, and free distribution for you).
 6. **Registry presence** — list on mcp.so, smithery.ai, glama.ai, PulseMCP, official MCP Registry,

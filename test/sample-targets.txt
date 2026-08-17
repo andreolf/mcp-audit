@@ -1,0 +1,14 @@
+# mcp-audit-batch sample list. One target per line.
+#   https://...        remote HTTP server (always safe to scan)
+#   npm:<package>      published server, spawned via `npx -y` (needs --allow-exec)
+#   cmd:<command>      local command (needs --allow-exec)
+
+# A local insecure server (the test fixture) — needs --allow-exec:
+cmd:node test/mock-mcp-server.js
+
+# An unreachable endpoint, to show skip/timeout handling:
+http://127.0.0.1:59999/mcp
+
+# Add real targets below, e.g.:
+# https://your-server.example/mcp
+# npm:@modelcontextprotocol/server-filesystem

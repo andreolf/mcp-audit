@@ -3,6 +3,7 @@
 import { execFile } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { parseList, runBatch, aggregate } from "../src/batch.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const cli = join(here, "..", "bin", "mcp-audit.js");
@@ -39,6 +40,21 @@ check("http unreachable: exits 2 (not scanned)", b.code === 2);
 // 3) no args -> usage (exit 2)
 const c = await run([]);
 check("no args: exits 2 (usage)", c.code === 2);
+
+// 4) batch: safe-by-default skips exec targets unless --allow-exec
+const list = `cmd:node ${mock}\nhttp://127.0.0.1:59999/mcp\n# a comment\nnot-a-valid-target`;
+const specs = parseList(list);
+check("batch: parses 3 targets (comment ignored)", specs.length === 3);
+
+const safe = await runBatch(specs, { concurrency: 3, allowExec: false });
+check("batch: skips exec target without --allow-exec", safe.find((r) => r.target.startsWith("cmd:"))?.skipped === true);
+
+const exec = await runBatch(specs, { concurrency: 3, allowExec: true });
+const mockRes = exec.find((r) => (r.target || "").includes("mock-mcp-server"));
+check("batch: with --allow-exec, scans the mock server", mockRes?.reachable === true);
+check("batch: mock server graded F", mockRes?.grade?.letter === "F");
+const agg = aggregate(exec);
+check("batch: aggregate computes exec-tool %", agg.execToolPct === 100);
 
 console.log(failures ? `\n${failures} test(s) failed` : "\nall tests passed");
 process.exit(failures ? 1 : 0);

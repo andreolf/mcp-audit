@@ -4,7 +4,8 @@
   "description": "npm audit for MCP servers — grade any MCP server A–F on auth, SSRF, static keys, and prompt-injection surface.",
   "type": "module",
   "bin": {
-    "mcp-audit": "bin/mcp-audit.js"
+    "mcp-audit": "bin/mcp-audit.js",
+    "mcp-audit-batch": "bin/mcp-audit-batch.js"
   },
   "engines": {
     "node": ">=18"
