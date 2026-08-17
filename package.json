@@ -1,12 +1,12 @@
 {
-  "name": "mcp-audit",
+  "name": "mcpaudit",
   "version": "0.1.0",
   "description": "npm audit for MCP servers — grade any MCP server A–F on auth, SSRF, static keys, and prompt-injection surface.",
   "type": "module",
   "bin": {
-    "mcp-audit": "bin/mcp-audit.js",
-    "mcp-audit-batch": "bin/mcp-audit-batch.js",
-    "mcp-audit-fetch": "bin/mcp-audit-fetch.js"
+    "mcpaudit": "bin/mcp-audit.js",
+    "mcpaudit-batch": "bin/mcp-audit-batch.js",
+    "mcpaudit-fetch": "bin/mcp-audit-fetch.js"
   },
   "engines": {
     "node": ">=18"
@@ -15,7 +15,26 @@
     "start": "node bin/mcp-audit.js",
     "test": "node test/run.mjs"
   },
-  "keywords": ["mcp", "model-context-protocol", "security", "audit", "scanner", "agents"],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "security",
+    "audit",
+    "scanner",
+    "ssrf",
+    "agents",
+    "llm",
+    "ai"
+  ],
   "license": "MIT",
-  "files": ["bin", "src", "README.md"]
+  "author": "andreolf",
+  "homepage": "https://github.com/andreolf/mcp-audit#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andreolf/mcp-audit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/andreolf/mcp-audit/issues"
+  },
+  "files": ["bin", "src", "README.md", "LICENSE"]
 }
