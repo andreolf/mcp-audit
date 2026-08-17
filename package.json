@@ -1,5 +1,5 @@
 {
-  "name": "mcpaudit",
+  "name": "@andreolf/mcpaudit",
   "version": "0.1.0",
   "description": "npm audit for MCP servers — grade any MCP server A–F on auth, SSRF, static keys, and prompt-injection surface.",
   "type": "module",
