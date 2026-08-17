@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// mcp-audit-fetch [--max N] [--out FILE] [--include-npm]
+// mcpaudit-fetch [--max N] [--out FILE] [--include-npm]
 // Pulls a scan target list from the official MCP Registry and writes a targets file.
 // Discovery only — never executes any server.
 import { writeFileSync } from "node:fs";

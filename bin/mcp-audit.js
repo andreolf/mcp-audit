@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// mcp-audit <http(s)-url>            scan a remote MCP server
-// mcp-audit --npm <package>          scan a published server via `npx -y <package>`
-// mcp-audit --cmd "<command line>"   scan a local server started by a command
+// mcpaudit <http(s)-url>            scan a remote MCP server
+// mcpaudit --npm <package>          scan a published server via `npx -y <package>`
+// mcpaudit --cmd "<command line>"   scan a local server started by a command
 // flags: --json  --header "K: V" (http)  --timeout <ms> (stdio)
 import { scan } from "../src/scan.js";
 import { toMarkdown, toJson, badge } from "../src/report.js";
@@ -36,9 +36,9 @@ function parseArgs(argv) {
 function usage() {
   console.error(
     "usage:\n" +
-    "  mcp-audit <http(s)-url> [--header \"Authorization: Bearer ...\"] [--json]\n" +
-    "  mcp-audit --npm <package> [--timeout 20000] [--json]\n" +
-    "  mcp-audit --cmd \"node server.js\" [--json]"
+    "  mcpaudit <http(s)-url> [--header \"Authorization: Bearer ...\"] [--json]\n" +
+    "  mcpaudit --npm <package> [--timeout 20000] [--json]\n" +
+    "  mcpaudit --cmd \"node server.js\" [--json]"
   );
 }
 

@@ -29,7 +29,7 @@ Scan a **local** server started by a command (stdio):
 node bin/mcp-audit.js --cmd "node my-server.js"
 ```
 
-Requires Node 18+ (uses global `fetch`). Zero dependencies. Once published: `npx mcp-audit ...`.
+Requires Node 18+ (uses global `fetch`). Zero dependencies. Install: `npm i -g @andreolf/mcpaudit` then `mcpaudit <url>` — or `npx @andreolf/mcpaudit <url>`.
 
 Exit codes: `0` clean · `1` critical/high finding · `2` couldn't scan / bad usage. CI-friendly.
 
@@ -59,7 +59,7 @@ node bin/mcp-audit-fetch.js --max 300 --out targets.txt   # HTTP remotes = safe 
 node bin/mcp-audit-batch.js targets.txt --concurrency 8 --out audit.md
 ```
 
-`mcp-audit-fetch` emits registry HTTP endpoints as scannable lines and npm packages as *commented*
+`mcpaudit-fetch` emits registry HTTP endpoints as scannable lines and npm packages as *commented*
 lines (opt in with `--include-npm`, then `--allow-exec` in a sandbox). A real run of the first 30
 registry servers found **50% accept `initialize` with no auth** — the kind of number the launch
 post is built on.
@@ -92,9 +92,9 @@ src/report.js      grading (A–F), badge, Markdown/JSON output
    *(PyPI/`uvx` equivalent is a small follow-up.)*
 2. **Static-key vs OAuth detection** — inspect the auth challenge / token format.
 3. **Deeper SSRF probe** — actually call fetch-style tools against a canary internal URL in a sandbox.
-4. ✅ **Batch mode + leaderboard** — `mcp-audit-batch targets.txt` → ranked report + headline stats.
+4. ✅ **Batch mode + leaderboard** — `mcpaudit-batch targets.txt` → ranked report + headline stats.
    *That ranked report is the launch artifact:* "We audited the 200 most-installed MCP servers."
-5. ✅ **Registry fetcher** (`mcp-audit-fetch`) — pulls HTTP targets from the official MCP Registry
+5. ✅ **Registry fetcher** (`mcpaudit-fetch`) — pulls HTTP targets from the official MCP Registry
    (discovery only, never executes). npm packages emitted commented-out. `--include-npm` to opt in.
 5. **Embeddable badge** — `MCP Security: A` shields.io-style badge servers add to their README
    (2026 ranking signal, and free distribution for you).
