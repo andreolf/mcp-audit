@@ -5,7 +5,8 @@
   "type": "module",
   "bin": {
     "mcp-audit": "bin/mcp-audit.js",
-    "mcp-audit-batch": "bin/mcp-audit-batch.js"
+    "mcp-audit-batch": "bin/mcp-audit-batch.js",
+    "mcp-audit-fetch": "bin/mcp-audit-fetch.js"
   },
   "engines": {
     "node": ">=18"

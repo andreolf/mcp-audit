@@ -4,6 +4,7 @@ import { execFile } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { parseList, runBatch, aggregate } from "../src/batch.js";
+import { serversToTargets } from "../src/registry.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const cli = join(here, "..", "bin", "mcp-audit.js");
@@ -55,6 +56,24 @@ check("batch: with --allow-exec, scans the mock server", mockRes?.reachable === 
 check("batch: mock server graded F", mockRes?.grade?.letter === "F");
 const agg = aggregate(exec);
 check("batch: aggregate computes exec-tool %", agg.execToolPct === 100);
+
+// 5) registry transform (offline, real API shape)
+const sample = [
+  { server: { name: "a", remotes: [{ type: "streamable-http", url: "https://a.example/mcp" }] },
+    _meta: { "io.modelcontextprotocol.registry/official": { status: "active", isLatest: true } } },
+  { server: { name: "a", remotes: [{ type: "streamable-http", url: "https://a.example/old" }] },
+    _meta: { "io.modelcontextprotocol.registry/official": { status: "active", isLatest: false } } }, // old version -> dropped
+  { server: { name: "b", remotes: [{ type: "streamable-http", url: "https://a.example/mcp" }] }, // dup url -> deduped
+    _meta: { "io.modelcontextprotocol.registry/official": { status: "active", isLatest: true } } },
+  { server: { name: "c", packages: [{ registryType: "npm", identifier: "c-mcp" }] },
+    _meta: { "io.modelcontextprotocol.registry/official": { status: "active", isLatest: true } } },
+];
+const t1 = serversToTargets(sample, { includeNpm: false });
+check("registry: extracts + dedups http remotes, drops old versions", t1.http.length === 1 && t1.http[0] === "https://a.example/mcp");
+check("registry: excludes npm by default", t1.npm.length === 0);
+const t2 = serversToTargets(sample, { includeNpm: true });
+check("registry: --include-npm surfaces npm packages", t2.npm.includes("c-mcp"));
+check("registry: npm lines are commented out (no execution by default)", /# npm:c-mcp/.test(t2.text));
 
 console.log(failures ? `\n${failures} test(s) failed` : "\nall tests passed");
 process.exit(failures ? 1 : 0);

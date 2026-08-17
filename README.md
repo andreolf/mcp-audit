@@ -50,6 +50,20 @@ node bin/mcp-audit-batch.js targets.txt --out audit.md
 Output includes the headline numbers ("X% of reachable HTTP servers accept initialize with no auth")
 that become the launch thread.
 
+### The full launch pipeline
+
+Pull targets from the **official MCP Registry** (discovery only — never executes a server), then audit them:
+
+```bash
+node bin/mcp-audit-fetch.js --max 300 --out targets.txt   # HTTP remotes = safe to scan
+node bin/mcp-audit-batch.js targets.txt --concurrency 8 --out audit.md
+```
+
+`mcp-audit-fetch` emits registry HTTP endpoints as scannable lines and npm packages as *commented*
+lines (opt in with `--include-npm`, then `--allow-exec` in a sandbox). A real run of the first 30
+registry servers found **50% accept `initialize` with no auth** — the kind of number the launch
+post is built on.
+
 ## Test
 
 ```bash
@@ -80,8 +94,8 @@ src/report.js      grading (A–F), badge, Markdown/JSON output
 3. **Deeper SSRF probe** — actually call fetch-style tools against a canary internal URL in a sandbox.
 4. ✅ **Batch mode + leaderboard** — `mcp-audit-batch targets.txt` → ranked report + headline stats.
    *That ranked report is the launch artifact:* "We audited the 200 most-installed MCP servers."
-   Remaining: a fetcher that pulls the target list from PulseMCP/Glama (kept separate from execution
-   for safety), so you can point it at the top-N.
+5. ✅ **Registry fetcher** (`mcp-audit-fetch`) — pulls HTTP targets from the official MCP Registry
+   (discovery only, never executes). npm packages emitted commented-out. `--include-npm` to opt in.
 5. **Embeddable badge** — `MCP Security: A` shields.io-style badge servers add to their README
    (2026 ranking signal, and free distribution for you).
 6. **Registry presence** — list on mcp.so, smithery.ai, glama.ai, PulseMCP, official MCP Registry,

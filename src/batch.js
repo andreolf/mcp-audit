@@ -123,7 +123,11 @@ export function toLeaderboard(results, agg) {
   lines.push("| Grade | Score | Server | Findings |");
   lines.push("|---|---|---|---|");
   for (const r of scored.slice(0, 25)) {
-    const top = (r.findings || []).filter((f) => f.severity === "critical" || f.severity === "high").map((f) => f.id);
+    const sev = (r.findings || []).filter((f) => f.severity === "critical" || f.severity === "high");
+    // Collapse repeats (e.g. one ssrf-surface per tool) into "id ×N".
+    const counts = {};
+    for (const f of sev) counts[f.id] = (counts[f.id] || 0) + 1;
+    const top = Object.entries(counts).map(([id, n]) => (n > 1 ? `${id} ×${n}` : id));
     lines.push(`| ${r.grade?.letter ?? "?"} | ${r.grade?.score ?? "?"} | \`${r.target}\` | ${top.join(", ") || "—"} |`);
   }
   return lines.join("\n");
