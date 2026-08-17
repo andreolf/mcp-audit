@@ -1,0 +1,18 @@
+{
+  "name": "mcp-audit",
+  "version": "0.1.0",
+  "description": "npm audit for MCP servers — grade any MCP server A–F on auth, SSRF, static keys, and prompt-injection surface.",
+  "type": "module",
+  "bin": {
+    "mcp-audit": "bin/mcp-audit.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node bin/mcp-audit.js"
+  },
+  "keywords": ["mcp", "model-context-protocol", "security", "audit", "scanner", "agents"],
+  "license": "MIT",
+  "files": ["bin", "src", "README.md"]
+}
