@@ -76,6 +76,25 @@ lines (opt in with `--include-npm`, then `--allow-exec` in a sandbox). A real ru
 registry servers found **50% accept `initialize` with no auth** — the kind of number the launch
 post is built on.
 
+## Use in CI (GitHub Action)
+
+Gate your MCP server's security on every PR. Start your server, then point the action at it:
+
+```yaml
+- name: Start my MCP server
+  run: node my-server.js &   # or docker run ..., then wait for it to be ready
+
+- name: Security-audit the MCP server
+  uses: andreolf/mcp-audit@v1
+  with:
+    url: http://localhost:3000/mcp
+    fail-on: D                      # fail the job on grade D or worse (default: F)
+    # header: "Authorization: Bearer ${{ secrets.MCP_TOKEN }}"   # optional
+```
+
+The job prints an A–F grade and the findings, and fails if the grade is at or below `fail-on`.
+Nothing is executed on the scanned server — it only sends a read-only handshake.
+
 ## Test
 
 ```bash
