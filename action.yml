@@ -1,0 +1,55 @@
+name: 'mcpaudit — MCP server security scan'
+description: 'Audit an MCP server (A–F grade) in CI: missing auth, SSRF surface, exec tools, prompt-injection surface.'
+author: 'andreolf'
+branding:
+  icon: 'shield'
+  color: 'purple'
+
+inputs:
+  url:
+    description: 'HTTP(S) URL of the MCP server to scan (start your server first, then point here).'
+    required: true
+  fail-on:
+    description: 'Fail the job if the grade is this letter or worse (A|B|C|D|F). Default: F.'
+    required: false
+    default: 'F'
+  header:
+    description: 'Optional auth header, e.g. "Authorization: Bearer ${{ secrets.TOKEN }}".'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run mcpaudit
+      shell: bash
+      env:
+        MCP_URL: ${{ inputs.url }}
+        FAIL_ON: ${{ inputs.fail-on }}
+        MCP_HEADER: ${{ inputs.header }}
+      run: |
+        set -uo pipefail
+        # Single scan → JSON. Header is optional.
+        if [ -n "${MCP_HEADER}" ]; then
+          npx -y -p @andreolf/mcpaudit@latest mcpaudit "$MCP_URL" --header "$MCP_HEADER" --json > mcpaudit-result.json || true
+        else
+          npx -y -p @andreolf/mcpaudit@latest mcpaudit "$MCP_URL" --json > mcpaudit-result.json || true
+        fi
+        node -e '
+          let r; try { r = require("./mcpaudit-result.json"); } catch { r = null; }
+          const th = (process.env.FAIL_ON || "F").toUpperCase();
+          if (!r || r.reachable === false || !r.grade) {
+            console.error("::error::mcpaudit could not scan the server (unreachable or no handshake).");
+            process.exit(1);
+          }
+          const order = ["F","D","C","B","A"];   // worst -> best
+          const got = (r.grade.letter || "F").toUpperCase();
+          const summary = `mcpaudit grade ${got} (${r.grade.score}/100), fail-on ${th}`;
+          // Human-readable findings in the log.
+          for (const f of r.findings || []) console.log(`- [${f.severity}] ${f.title}`);
+          if (order.indexOf(got) <= order.indexOf(th)) {
+            console.log("::error::" + summary + " — failing the job.");
+            process.exit(1);
+          }
+          console.log("::notice::" + summary + " — pass.");
+        '
